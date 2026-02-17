@@ -163,6 +163,57 @@ export async function updateChapterTitle(chapterId: string, title: string) {
     }
 }
 
+export async function updateChapter(id: string, formData: FormData) {
+    const session = await getSession();
+    if (!session?.user?.email) return { error: "Not authenticated" };
+
+    const title = formData.get("title") as string;
+    const file = formData.get("file") as File | null;
+    const catalogId = formData.get("catalogId") as string;
+
+    if (!title) return { error: "Title is required" };
+
+    const chapter = await prisma.chapter.findUnique({
+        where: { id },
+    });
+
+    if (!chapter) return { error: "Chapter not found" };
+
+    let pdfUrl = chapter.pdfUrl;
+
+    if (file && file.size > 0 && file.type === "application/pdf") {
+        try {
+            const bytes = await file.arrayBuffer();
+            const buffer = Buffer.from(bytes);
+
+            const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+            const filename = `${uniqueSuffix}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "")}`;
+            const uploadDir = join(process.cwd(), "public", "uploads");
+
+            await mkdir(uploadDir, { recursive: true });
+            await writeFile(join(uploadDir, filename), buffer);
+            pdfUrl = `/uploads/${filename}`;
+        } catch (e) {
+            console.error(e);
+            return { error: "File upload failed" };
+        }
+    }
+
+    try {
+        await prisma.chapter.update({
+            where: { id },
+            data: {
+                title,
+                pdfUrl,
+            },
+        });
+        if (catalogId) revalidatePath(`/catalog/${catalogId}`);
+        return { success: true };
+    } catch (error) {
+        return { error: "Failed to update chapter" };
+    }
+}
+
 export async function uploadEditorImage(formData: FormData) {
     const file = formData.get("image") as File;
     if (!file) return { error: "No image provided" };
@@ -216,4 +267,24 @@ export async function getChapterPages(chapterId: string) {
         where: { chapterId },
         orderBy: { pageNumber: 'asc' }
     });
+}
+
+export async function reorderChapters(catalogId: string, chapterIds: string[]) {
+    const session = await getSession();
+    if (!session?.user?.email) return { error: "Not authenticated" };
+
+    try {
+        // Simple sequential update
+        for (let i = 0; i < chapterIds.length; i++) {
+            await prisma.chapter.update({
+                where: { id: chapterIds[i] },
+                data: { chapterNumber: i + 1 }
+            });
+        }
+        revalidatePath(`/catalog/${catalogId}`);
+        return { success: true };
+    } catch (error) {
+        console.error(error);
+        return { error: "Failed to reorder chapters" };
+    }
 }

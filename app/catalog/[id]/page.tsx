@@ -7,6 +7,8 @@ import { formatDistanceToNow } from "date-fns";
 import { prisma } from "@/lib/prisma";
 import { toggleLike, addComment } from "@/actions/social";
 import { revalidatePath } from "next/cache";
+import CatalogManagement from "@/components/CatalogManagement";
+import ChapterMainActions from "@/components/ChapterMainActions";
 
 // Server Actions Wrappers
 async function likeCatalog(id: string) {
@@ -30,7 +32,8 @@ export default async function CatalogDetailPage({ params }: { params: Promise<{ 
 
     if (!catalog) notFound();
 
-    const isAuthor = session?.user?.email && catalog.authorId === (await prisma.user.findUnique({ where: { email: session.user.email }, select: { id: true } }))?.id;
+    // @ts-ignore
+    const isAuthor = session?.user?.email === catalog?.author?.email;
 
     return (
         <div className="max-w-4xl mx-auto space-y-8">
@@ -70,10 +73,13 @@ export default async function CatalogDetailPage({ params }: { params: Promise<{ 
                     </div>
 
                     {isAuthor && (
-                        <div className="pt-4 flex gap-3">
-                            <Link href={`/catalog/${catalog.id}/chapter/create`} className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition flex items-center text-sm">
+                        <div className="pt-4 flex justify-between items-center gap-3">
+                            <Link href={`/catalog/${catalog.id}/chapter/create`} className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition flex items-center text-sm font-semibold shadow-sm">
                                 <FaPlus className="mr-2" /> Add Chapter
                             </Link>
+
+                            {/* Management Component */}
+                            <CatalogManagement catalog={catalog as any} />
                         </div>
                     )}
                 </div>
@@ -102,14 +108,11 @@ export default async function CatalogDetailPage({ params }: { params: Promise<{ 
                                     <span className="text-xs text-gray-400">
                                         {formatDistanceToNow(new Date(chapter.createdAt), { addSuffix: true })}
                                     </span>
-                                    {isAuthor && !chapter.pdfUrl && (
-                                        <Link
-                                            href={`/catalog/${catalog.id}/chapter/${chapter.id}/edit`}
-                                            className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition"
-                                        >
-                                            <FaPen className="text-sm" />
-                                        </Link>
-                                    )}
+                                    <ChapterMainActions
+                                        chapter={chapter as any}
+                                        catalogId={catalog.id}
+                                        isAuthor={isAuthor}
+                                    />
                                 </div>
                             </div>
                         ))}

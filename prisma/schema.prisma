@@ -74,13 +74,14 @@ model Catalog {
 }
 
 model Chapter {
-  id        String   @id @default(cuid())
-  title     String
-  pdfUrl    String?
-  catalogId String
-  catalog   Catalog  @relation(fields: [catalogId], references: [id], onDelete: Cascade)
-  pages     Page[]
-  createdAt DateTime @default(now())
+  id            String   @id @default(cuid())
+  title         String
+  pdfUrl        String?
+  chapterNumber Int      @default(1)
+  catalogId     String
+  catalog       Catalog  @relation(fields: [catalogId], references: [id], onDelete: Cascade)
+  pages         Page[]
+  createdAt     DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
