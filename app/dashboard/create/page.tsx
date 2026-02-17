@@ -46,6 +46,17 @@ export default function CreateCatalogPage() {
                 </div>
 
                 <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Cover Image</label>
+                    <input
+                        name="coverImage"
+                        type="file"
+                        accept="image/*"
+                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Optional. Upload a cover image for your catalog.</p>
+                </div>
+
+                <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
                     <select
                         name="category"

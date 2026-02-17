@@ -5,18 +5,21 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FaFilePdf, FaFont } from "react-icons/fa";
 
-export default function CreateChapterPage({ params }: { params: { id: string } }) {
+import { use } from "react";
+
+export default function CreateChapterPage({ params }: { params: Promise<{ id: string }> }) {
     const router = useRouter();
+    const { id } = use(params);
     const [error, setError] = useState("");
     const [type, setType] = useState<"text" | "pdf">("text");
 
     async function clientAction(formData: FormData) {
         formData.append("type", type);
-        const res = await createChapter(params.id, formData);
+        const res = await createChapter(id, formData);
         if (res?.error) {
             setError(res.error);
         } else {
-            router.push(`/catalog/${params.id}`);
+            router.push(`/catalog/${id}`);
         }
     }
 
@@ -31,8 +34,8 @@ export default function CreateChapterPage({ params }: { params: { id: string } }
                     type="button"
                     onClick={() => setType("text")}
                     className={`flex-1 p-4 rounded-lg border-2 flex flex-col items-center gap-2 transition ${type === "text"
-                            ? "border-indigo-600 bg-indigo-50 text-indigo-700"
-                            : "border-gray-200 hover:border-indigo-200 text-gray-600"
+                        ? "border-indigo-600 bg-indigo-50 text-indigo-700"
+                        : "border-gray-200 hover:border-indigo-200 text-gray-600"
                         }`}
                 >
                     <FaFont className="text-2xl" />
@@ -42,8 +45,8 @@ export default function CreateChapterPage({ params }: { params: { id: string } }
                     type="button"
                     onClick={() => setType("pdf")}
                     className={`flex-1 p-4 rounded-lg border-2 flex flex-col items-center gap-2 transition ${type === "pdf"
-                            ? "border-indigo-600 bg-indigo-50 text-indigo-700"
-                            : "border-gray-200 hover:border-indigo-200 text-gray-600"
+                        ? "border-indigo-600 bg-indigo-50 text-indigo-700"
+                        : "border-gray-200 hover:border-indigo-200 text-gray-600"
                         }`}
                 >
                     <FaFilePdf className="text-2xl" />

@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { revalidatePath } from "next/cache";
+import { writeFile, mkdir } from "fs/promises";
+import { join } from "path";
 
 export async function getSession() {
     return await getServerSession(authOptions);
@@ -17,6 +19,7 @@ export async function createCatalog(formData: FormData) {
     const description = formData.get("description") as string;
     const category = formData.get("category") as string;
     const isPublic = formData.get("isPublic") === "on";
+    const coverImageFile = formData.get("coverImage") as File | null;
 
     // Basic validation
     if (!title) return { error: "Title is required" };
@@ -27,6 +30,29 @@ export async function createCatalog(formData: FormData) {
 
     if (!user) return { error: "User not found" };
 
+    let coverImageUrl = null;
+
+    if (coverImageFile && coverImageFile.size > 0) {
+        try {
+            const bytes = await coverImageFile.arrayBuffer();
+            const buffer = Buffer.from(bytes);
+
+            // Create unique filename
+            const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+            const filename = `cover-${uniqueSuffix}-${coverImageFile.name.replace(/[^a-zA-Z0-9.-]/g, "")}`;
+            const uploadDir = join(process.cwd(), "public", "uploads", "covers");
+
+            // Ensure directory exists
+            await mkdir(uploadDir, { recursive: true });
+
+            await writeFile(join(uploadDir, filename), buffer);
+            coverImageUrl = `/uploads/covers/${filename}`;
+        } catch (e) {
+            console.error(e);
+            return { error: "File upload failed" };
+        }
+    }
+
     try {
         const catalog = await prisma.catalog.create({
             data: {
@@ -34,6 +60,7 @@ export async function createCatalog(formData: FormData) {
                 description,
                 category,
                 isPublic,
+                coverImage: coverImageUrl,
                 authorId: user.id,
             },
         });

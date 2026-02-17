@@ -5,7 +5,7 @@ import Link from "next/link";
 import { FaArrowLeft } from "react-icons/fa";
 import { getSession } from "@/actions/catalog";
 
-export default async function EditChapterPage({ params }: { params: { id: string; chapterId: string } }) {
+export default async function EditChapterPage({ params }: { params: Promise<{ id: string; chapterId: string }> }) {
     const { id, chapterId } = await params;
     const session = await getSession();
 

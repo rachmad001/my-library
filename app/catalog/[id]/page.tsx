@@ -22,7 +22,7 @@ async function postComment(formData: FormData) {
     }
 }
 
-export default async function CatalogDetailPage({ params }: { params: { id: string } }) {
+export default async function CatalogDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
     const catalog = await getCatalogById(id);
     const session = await getSession();

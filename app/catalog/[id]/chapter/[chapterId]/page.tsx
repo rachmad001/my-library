@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { FaArrowLeft } from "react-icons/fa";
 
-export default async function ChapterReaderPage({ params }: { params: { id: string; chapterId: string } }) {
+export default async function ChapterReaderPage({ params }: { params: Promise<{ id: string; chapterId: string }> }) {
     const { id, chapterId } = await params;
 
     const chapter = await prisma.chapter.findUnique({
