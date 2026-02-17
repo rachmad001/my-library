@@ -6,7 +6,7 @@ import { Document, Page as PdfPage, pdfjs } from 'react-pdf';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 // Set worker source for react-pdf
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
 interface FlipbookReaderProps {
     type: "text" | "pdf";
@@ -47,6 +47,7 @@ export default function FlipbookReader({ type, content, pdfUrl }: FlipbookReader
                 {type === "pdf" && pdfUrl ? (
                     <Document file={pdfUrl} onLoadSuccess={onDocumentLoadSuccess} className="flex justify-center">
                         {numPages > 0 && (
+                            // @ts-ignore
                             <HTMLFlipBook
                                 width={width}
                                 height={height}
@@ -74,6 +75,7 @@ export default function FlipbookReader({ type, content, pdfUrl }: FlipbookReader
                         )}
                     </Document>
                 ) : (
+                    // @ts-ignore
                     <HTMLFlipBook
                         width={width}
                         height={height}
