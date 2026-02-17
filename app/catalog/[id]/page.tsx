@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FaBookOpen, FaFilePdf, FaPlus, FaPen } from "react-icons/fa";
 import { formatDistanceToNow } from "date-fns";
+import { prisma } from "@/lib/prisma";
 import { toggleLike, addComment } from "@/actions/social";
 import { revalidatePath } from "next/cache";
 
@@ -86,19 +87,31 @@ export default async function CatalogDetailPage({ params }: { params: Promise<{ 
                 ) : (
                     <div className="space-y-3">
                         {catalog.chapters.map((chapter) => (
-                            <Link
-                                href={`/catalog/${catalog.id}/chapter/${chapter.id}`}
+                            <div
                                 key={chapter.id}
-                                className="block p-4 border border-gray-100 rounded-lg hover:border-indigo-300 hover:bg-indigo-50 transition flex justify-between items-center group"
+                                className="p-4 border border-gray-100 rounded-lg hover:border-indigo-300 hover:bg-indigo-50 transition flex justify-between items-center group"
                             >
-                                <div className="flex items-center space-x-3">
+                                <Link
+                                    href={`/catalog/${catalog.id}/chapter/${chapter.id}`}
+                                    className="flex items-center space-x-3 flex-1"
+                                >
                                     {chapter.pdfUrl ? <FaFilePdf className="text-red-500" /> : <FaBookOpen className="text-indigo-500" />}
                                     <span className="font-medium text-gray-700 group-hover:text-indigo-700">{chapter.title}</span>
+                                </Link>
+                                <div className="flex items-center gap-4">
+                                    <span className="text-xs text-gray-400">
+                                        {formatDistanceToNow(new Date(chapter.createdAt), { addSuffix: true })}
+                                    </span>
+                                    {isAuthor && !chapter.pdfUrl && (
+                                        <Link
+                                            href={`/catalog/${catalog.id}/chapter/${chapter.id}/edit`}
+                                            className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition"
+                                        >
+                                            <FaPen className="text-sm" />
+                                        </Link>
+                                    )}
                                 </div>
-                                <span className="text-xs text-gray-400">
-                                    {formatDistanceToNow(new Date(chapter.createdAt), { addSuffix: true })}
-                                </span>
-                            </Link>
+                            </div>
                         ))}
                     </div>
                 )}

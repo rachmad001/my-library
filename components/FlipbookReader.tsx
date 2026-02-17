@@ -5,6 +5,10 @@ import HTMLFlipBook from 'react-pageflip';
 import { Document, Page as PdfPage, pdfjs } from 'react-pdf';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
+// Import Quill and table styles to ensure public rendering matches editor
+import 'react-quill-new/dist/quill.core.css';
+import 'quill-table-better/dist/quill-table-better.css';
+
 // Set worker source for react-pdf
 pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
@@ -84,11 +88,13 @@ export default function FlipbookReader({ type, content, pdfUrl }: FlipbookReader
                         className="shadow-2xl"
                         maxShadowOpacity={0.5}
                         mobileScrollSupport={true}
+                        flippingTime={1000}
+                        usePortrait={false}
                     >
                         {content?.map((page) => (
                             <div key={page.id} className="bg-white p-8 shadow-inner border-r border-gray-100 prose prose-indigo overflow-y-auto">
                                 <div className="h-full flex flex-col">
-                                    <div className="flex-1" dangerouslySetInnerHTML={{ __html: page.content }} />
+                                    <div className="flex-1 ql-editor-view" dangerouslySetInnerHTML={{ __html: page.content }} />
                                     <span className="text-center text-xs text-gray-400 mt-4">{page.pageNumber}</span>
                                 </div>
                             </div>
@@ -100,6 +106,37 @@ export default function FlipbookReader({ type, content, pdfUrl }: FlipbookReader
             <p className="text-white mt-8 text-sm opacity-50">
                 {type === "pdf" ? `PDF Mode (${numPages} pages)` : "Text Mode"} • Drag page corners to flip
             </p>
+
+            <style jsx global>{`
+                .ql-editor-view {
+                    word-wrap: break-word;
+                    word-break: break-word;
+                }
+                .ql-editor-view iframe, 
+                .ql-editor-view video {
+                    max-width: 100%;
+                    display: block;
+                    margin: 1rem auto;
+                }
+                .ql-editor-view table {
+                    border-collapse: collapse;
+                    width: 100%;
+                    border: 1px solid #ddd;
+                }
+                .ql-editor-view table td,
+                .ql-editor-view table th {
+                    border: 1px solid #ddd;
+                    padding: 8px;
+                }
+                .ql-editor-view img {
+                    max-width: 100%;
+                    height: auto;
+                }
+                .ql-video {
+                    width: 100%;
+                    aspect-ratio: 16/9;
+                }
+            `}</style>
         </div>
     );
 }

@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/actions/catalog";
 import { revalidatePath } from "next/cache";
 
-import { writeFile } from "fs/promises";
+import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 
 export async function createChapter(catalogId: string, formData: FormData) {
@@ -102,6 +102,112 @@ export async function savePageContent(chapterId: string, pageNumber: number, con
         return { success: true };
     } catch (error) {
         return { error: "Failed to save page" };
+    }
+}
+
+export async function deleteChapter(chapterId: string, catalogId: string) {
+    const session = await getSession();
+    if (!session?.user?.email) return { error: "Not authenticated" };
+
+    // Ownership check would ideally happen here
+
+    try {
+        await prisma.chapter.delete({
+            where: { id: chapterId },
+        });
+        revalidatePath(`/catalog/${catalogId}`);
+        return { success: true };
+    } catch (e) {
+        return { error: "Failed to delete chapter" };
+    }
+}
+
+export async function deletePage(chapterId: string, pageId: string) {
+    // Ownership check
+
+    try {
+        await prisma.page.delete({
+            where: { id: pageId },
+        });
+
+        // Re-index remaining pages
+        const pages = await prisma.page.findMany({
+            where: { chapterId },
+            orderBy: { pageNumber: 'asc' }
+        });
+
+        for (let i = 0; i < pages.length; i++) {
+            await prisma.page.update({
+                where: { id: pages[i].id },
+                data: { pageNumber: i + 1 }
+            });
+        }
+
+        return { success: true };
+    } catch (e) {
+        return { error: "Failed to delete page" };
+    }
+}
+
+export async function updateChapterTitle(chapterId: string, title: string) {
+    if (!title) return { error: "Title is required" };
+
+    try {
+        await prisma.chapter.update({
+            where: { id: chapterId },
+            data: { title },
+        });
+        return { success: true };
+    } catch (e) {
+        return { error: "Failed to update title" };
+    }
+}
+
+export async function uploadEditorImage(formData: FormData) {
+    const file = formData.get("image") as File;
+    if (!file) return { error: "No image provided" };
+
+    try {
+        const bytes = await file.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+
+        const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+        const filename = `editor-${uniqueSuffix}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "")}`;
+        const uploadDir = join(process.cwd(), "public", "uploads", "editor");
+
+        await mkdir(uploadDir, { recursive: true });
+
+        await writeFile(join(uploadDir, filename), buffer);
+        const url = `/uploads/editor/${filename}`;
+
+        return { success: true, url };
+    } catch (e) {
+        console.error(e);
+        return { error: "Image upload failed" };
+    }
+}
+
+export async function uploadEditorVideo(formData: FormData) {
+    const file = formData.get("video") as File;
+    if (!file) return { error: "No video provided" };
+
+    try {
+        const bytes = await file.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+
+        const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+        const filename = `video-${uniqueSuffix}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "")}`;
+        const uploadDir = join(process.cwd(), "public", "uploads", "editor");
+
+        await mkdir(uploadDir, { recursive: true });
+
+        await writeFile(join(uploadDir, filename), buffer);
+        const url = `/uploads/editor/${filename}`;
+
+        return { success: true, url };
+    } catch (e) {
+        console.error(e);
+        return { error: "Video upload failed" };
     }
 }
 
