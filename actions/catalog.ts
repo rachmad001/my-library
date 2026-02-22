@@ -111,6 +111,24 @@ export async function getCatalogById(id: string) {
                     { createdAt: "asc" }
                 ]
             },
+            comments: {
+                where: { parentId: null }, // Only top-level comments initially
+                orderBy: [
+                    { isPinned: "desc" },
+                    { createdAt: "desc" }
+                ],
+                include: {
+                    user: { select: { id: true, name: true, image: true } },
+                    replies: {
+                        orderBy: { createdAt: "asc" },
+                        include: {
+                            user: { select: { id: true, name: true, image: true } },
+                            _count: { select: { likes: true, dislikes: true } }
+                        }
+                    },
+                    _count: { select: { likes: true, dislikes: true } }
+                }
+            },
             _count: { select: { likes: true, comments: true } }
         },
     });

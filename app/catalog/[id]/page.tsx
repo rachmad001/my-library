@@ -9,6 +9,7 @@ import { toggleLike, addComment } from "@/actions/social";
 import { revalidatePath } from "next/cache";
 import CatalogManagement from "@/components/CatalogManagement";
 import ChapterMainActions from "@/components/ChapterMainActions";
+import CommentList from "@/components/CommentList";
 
 // Server Actions Wrappers
 async function likeCatalog(id: string) {
@@ -16,19 +17,14 @@ async function likeCatalog(id: string) {
     await toggleLike(id);
 }
 
-async function postComment(formData: FormData) {
-    "use server";
-    const catalogId = formData.get("catalogId") as string;
-    const content = formData.get("content") as string;
-    if (content.trim()) {
-        await addComment(catalogId, content);
-    }
-}
-
 export default async function CatalogDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
     const catalog = await getCatalogById(id);
     const session = await getSession();
+
+    const currentUser = session?.user?.email
+        ? await prisma.user.findUnique({ where: { email: session.user.email } })
+        : null;
 
     if (!catalog) notFound();
 
@@ -121,33 +117,13 @@ export default async function CatalogDetailPage({ params }: { params: Promise<{ 
             </div>
 
             {/* Comments */}
-            <div className="bg-white rounded-xl shadow-sm p-8 border border-gray-100">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Comments ({catalog._count?.comments || 0})</h2>
-
-                {session && (
-                    <form action={postComment} className="mb-8">
-                        <input type="hidden" name="catalogId" value={catalog.id} />
-                        <textarea
-                            name="content"
-                            rows={3}
-                            className="w-full border border-gray-300 rounded-md p-3 focus:ring-indigo-500 text-black"
-                            placeholder="Leave a comment..."
-                            required
-                        ></textarea>
-                        <button type="submit" className="mt-2 bg-gray-900 text-white px-4 py-2 rounded-md text-sm hover:bg-gray-800 transition">
-                            Post Comment
-                        </button>
-                    </form>
-                )}
-
-                {/* Load comments here - For now just a placeholder since I didn't verify comment fetching relation */}
-                <div className="space-y-6">
-                    {/* If I fetched comments in getCatalogById, I would map them here. 
-                 I need to update getCatalogById to include comments.
-              */}
-                    <p className="text-gray-500 text-sm">Comments functionality ready. (Need to fetch list).</p>
-                </div>
-            </div>
+            <CommentList
+                comments={catalog.comments || []}
+                catalogId={catalog.id}
+                isCatalogOwner={isAuthor}
+                currentUserId={currentUser?.id}
+                totalComments={catalog._count?.comments || 0}
+            />
 
         </div>
     );

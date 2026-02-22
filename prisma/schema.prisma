@@ -47,6 +47,8 @@ model User {
   catalogs      Catalog[]
   comments      Comment[]
   likes         Like[]
+  commentLikes     CommentLike[]
+  commentDislikes  CommentDislike[]
 }
 
 model VerificationToken {
@@ -113,4 +115,36 @@ model Comment {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   catalog   Catalog  @relation(fields: [catalogId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+  
+  // Nested comments
+  parentId  String?
+  parent    Comment?  @relation("ParentChild", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("ParentChild")
+
+  // Pinning
+  isPinned  Boolean   @default(false)
+
+  // Reactions
+  likes     CommentLike[]
+  dislikes  CommentDislike[]
+}
+
+model CommentLike {
+  id        String   @id @default(cuid())
+  userId    String
+  commentId String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, commentId])
+}
+
+model CommentDislike {
+  id        String   @id @default(cuid())
+  userId    String
+  commentId String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, commentId])
 }
