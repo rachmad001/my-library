@@ -49,6 +49,8 @@ model User {
   likes         Like[]
   commentLikes     CommentLike[]
   commentDislikes  CommentDislike[]
+  readingLists     ReadingList[]
+  readingListGroups ReadingListGroup[]
 }
 
 model VerificationToken {
@@ -73,6 +75,7 @@ model Catalog {
   chapters    Chapter[]
   likes       Like[]
   comments    Comment[]
+  readingLists ReadingList[]
 }
 
 model Chapter {
@@ -147,4 +150,30 @@ model CommentDislike {
   comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
 
   @@unique([userId, commentId])
+}
+
+model ReadingList {
+  id        String   @id @default(cuid())
+  userId    String
+  catalogId String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  catalog   Catalog  @relation(fields: [catalogId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  groupId   String?
+  group     ReadingListGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, catalogId])
+}
+
+model ReadingListGroup {
+  id        String   @id @default(cuid())
+  name      String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     ReadingList[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, name])
 }

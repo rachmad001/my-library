@@ -12,13 +12,21 @@ export default async function DashboardPage() {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold text-gray-900">My Catalogs</h1>
-                <Link
-                    href="/dashboard/create"
-                    className="bg-indigo-600 text-white px-4 py-2 rounded-md flex items-center space-x-2 hover:bg-indigo-700 transition"
-                >
-                    <FaPlus />
-                    <span>Create Catalog</span>
-                </Link>
+                <div className="flex items-center gap-3">
+                    <Link
+                        href="/dashboard/reading-list"
+                        className="bg-white text-indigo-600 border border-indigo-600 px-4 py-2 rounded-md flex items-center space-x-2 hover:bg-indigo-50 transition font-semibold text-sm"
+                    >
+                        <span>Reading List</span>
+                    </Link>
+                    <Link
+                        href="/dashboard/create"
+                        className="bg-indigo-600 text-white px-4 py-2 rounded-md flex items-center space-x-2 hover:bg-indigo-700 transition font-semibold text-sm shadow-sm"
+                    >
+                        <FaPlus size={12} />
+                        <span>Create Catalog</span>
+                    </Link>
+                </div>
             </div>
 
             {catalogs.length === 0 ? (

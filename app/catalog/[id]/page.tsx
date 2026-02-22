@@ -10,6 +10,8 @@ import { revalidatePath } from "next/cache";
 import CatalogManagement from "@/components/CatalogManagement";
 import ChapterMainActions from "@/components/ChapterMainActions";
 import CommentList from "@/components/CommentList";
+import SaveToReadingList from "@/components/SaveToReadingList";
+import { checkIfInReadingList } from "@/actions/reading-list";
 
 // Server Actions Wrappers
 async function likeCatalog(id: string) {
@@ -27,6 +29,8 @@ export default async function CatalogDetailPage({ params }: { params: Promise<{ 
         : null;
 
     if (!catalog) notFound();
+
+    const isSaved = await checkIfInReadingList(catalog.id);
 
     // @ts-ignore
     const isAuthor = session?.user?.email === catalog?.author?.email;
@@ -54,13 +58,24 @@ export default async function CatalogDetailPage({ params }: { params: Promise<{ 
                             <h1 className="text-3xl font-bold text-gray-900 leading-tight">{catalog.title}</h1>
                             <p className="text-gray-500 text-sm mt-1">by {catalog.author.name}</p>
                         </div>
-                        {/* Like Button */}
-                        <form action={likeCatalog.bind(null, catalog.id)}>
-                            <button className="flex flex-col items-center text-gray-400 hover:text-red-500 transition">
-                                <span className="text-2xl">♥</span>
-                                <span className="text-xs">{catalog._count?.likes || 0}</span>
-                            </button>
-                        </form>
+                        {/* Social Actions */}
+                        <div className="flex items-center gap-6">
+                            {/* Like Button */}
+                            <form action={likeCatalog.bind(null, catalog.id)}>
+                                <button className="flex flex-col items-center text-gray-400 hover:text-red-500 transition">
+                                    <span className="text-2xl">♥</span>
+                                    <span className="text-xs">{catalog._count?.likes || 0}</span>
+                                </button>
+                            </form>
+
+                            {/* Save Button */}
+                            {currentUser && (
+                                <SaveToReadingList
+                                    catalogId={catalog.id}
+                                    initialIsSaved={isSaved}
+                                />
+                            )}
+                        </div>
                     </div>
 
                     <div className="prose prose-indigo text-gray-600">
