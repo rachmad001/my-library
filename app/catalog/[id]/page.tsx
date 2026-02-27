@@ -11,6 +11,7 @@ import CatalogManagement from "@/components/CatalogManagement";
 import ChapterMainActions from "@/components/ChapterMainActions";
 import CommentList from "@/components/CommentList";
 import SaveToReadingList from "@/components/SaveToReadingList";
+import ShareButton from "@/components/ShareButton";
 import { checkIfInReadingList } from "@/actions/reading-list";
 
 // Server Actions Wrappers
@@ -75,6 +76,9 @@ export default async function CatalogDetailPage({ params }: { params: Promise<{ 
                                     initialIsSaved={isSaved}
                                 />
                             )}
+
+                            {/* Share Button */}
+                            <ShareButton title={catalog.title} catalogId={catalog.id} />
                         </div>
                     </div>
 
